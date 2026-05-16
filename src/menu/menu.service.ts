@@ -37,6 +37,7 @@ export class MenuService {
         categoria: dto.categoria,
         precio: dto.precio.toFixed(2),
         tiempoPreparacion: dto.tiempo_preparacion,
+        imagenUrl: dto.imagen_url ?? null,
         activo: true,
         ingredientes,
       });
@@ -74,6 +75,7 @@ export class MenuService {
       categoria: producto.categoria,
       precio: Number(producto.precio),
       tiempo_preparacion: producto.tiempoPreparacion,
+      imagen_url: producto.imagenUrl,
       activo: producto.activo,
       ingredientes: producto.ingredientes?.map((ingrediente) => ({
         id: ingrediente.id,
