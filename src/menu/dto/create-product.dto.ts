@@ -1,6 +1,17 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsEnum, IsInt, IsNumber, IsString, MaxLength, Min } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { CategoriaProducto } from '../../common/enums/product-category.enum';
 
 export class CreateProductoDto {
@@ -24,6 +35,13 @@ export class CreateProductoDto {
   @IsInt()
   @Min(1)
   tiempo_preparacion: number;
+
+  @ApiPropertyOptional({ example: 'https://cdn.gustosoft.local/productos/hamburguesa-clasica.jpg' })
+  @IsOptional()
+  @IsString()
+  @IsUrl({ require_protocol: true })
+  @MaxLength(500)
+  imagen_url?: string;
 
   @ApiProperty({ type: [Number], example: [1, 2] })
   @IsArray()
