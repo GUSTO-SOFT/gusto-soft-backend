@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { InventarioModule } from '../inventory/inventory.module';
 import { MenuModule } from '../menu/menu.module';
 import { MesasModule } from '../tables/tables.module';
 import { NotificacionesModule } from '../notifications/notifications.module';
@@ -13,6 +14,7 @@ import { PedidosService } from './orders.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Pedido, PedidoDetalle, PedidoEstadoHistorial]),
+    InventarioModule,
     MesasModule,
     MenuModule,
     NotificacionesModule,
