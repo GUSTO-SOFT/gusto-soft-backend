@@ -11,6 +11,7 @@
     "start:prod": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\" --fix",
     "test": "jest",
+    "test:hu": "node scripts/hu-smoke-test.mjs",
     "test:watch": "jest --watch",
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts"
   },
