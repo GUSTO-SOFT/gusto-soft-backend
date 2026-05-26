@@ -1,7 +1,17 @@
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { CategoriaProducto } from '../../common/enums/product-category.enum';
 import { Ingrediente } from '../../inventory/entities/ingredient.entity';
 import { PedidoDetalle } from '../../orders/entities/order-item.entity';
+import { ProductRecipeIngredient } from './product-recipe-ingredient.entity';
 
 @Entity('products')
 export class Producto {
@@ -33,6 +43,9 @@ export class Producto {
     inverseJoinColumn: { name: 'ingredient_id', referencedColumnName: 'id' },
   })
   ingredientes: Ingrediente[];
+
+  @OneToMany(() => ProductRecipeIngredient, (recipe) => recipe.producto, { cascade: true, eager: true })
+  recipeIngredients: ProductRecipeIngredient[];
 
   @OneToMany(() => PedidoDetalle, (detalle) => detalle.producto)
   detalles: PedidoDetalle[];

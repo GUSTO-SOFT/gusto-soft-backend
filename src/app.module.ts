@@ -8,6 +8,7 @@ import { MenuModule } from './menu/menu.module';
 import { MesasModule } from './tables/tables.module';
 import { NotificacionesModule } from './notifications/notifications.module';
 import { PedidosModule } from './orders/orders.module';
+import { ReportModule } from './reports/report.module';
 import { UsuariosModule } from './users/users.module';
 
 @Module({
@@ -18,9 +19,9 @@ import { UsuariosModule } from './users/users.module';
       port: envNumber('DB_PORT', 3306),
       username: envString('DB_USERNAME', 'root'),
       password: envString('DB_PASSWORD', ''),
-      database: envString('DB_DATABASE', 'gusto_soft'),
+      database: envString('DB_DATABASE', envString('DB_NAME', 'gusto_soft')),
       autoLoadEntities: true,
-      synchronize: envBoolean('DB_SYNC', true),
+      synchronize: envBoolean('DB_SYNC', envBoolean('TYPEORM_SYNCHRONIZE', true)),
       logging: envBoolean('DB_LOGGING', false),
       timezone: 'Z',
     }),
@@ -30,6 +31,7 @@ import { UsuariosModule } from './users/users.module';
     InventarioModule,
     MenuModule,
     PedidosModule,
+    ReportModule,
     CocinaModule,
     NotificacionesModule,
   ],

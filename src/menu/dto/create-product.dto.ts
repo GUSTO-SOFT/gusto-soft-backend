@@ -14,6 +14,20 @@ import {
 } from 'class-validator';
 import { CategoriaProducto } from '../../common/enums/product-category.enum';
 
+export class ProductIngredientDto {
+  @ApiProperty({ example: 1 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  ingrediente_id: number;
+
+  @ApiProperty({ example: 0.25 })
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 3 })
+  @Min(0.001)
+  cantidad: number;
+}
+
 export class CreateProductoDto {
   @ApiProperty({ example: 'Hamburguesa clasica' })
   @IsString()
@@ -46,8 +60,7 @@ export class CreateProductoDto {
   @ApiProperty({ type: [Number], example: [1, 2] })
   @IsArray()
   @ArrayMinSize(1)
-  @Type(() => Number)
-  @IsInt({ each: true })
-  @Min(1, { each: true })
-  ingredientes: number[];
+  @ValidateNested({ each: true })
+  @Type(() => ProductIngredientDto)
+  ingredientes: ProductIngredientDto[];
 }

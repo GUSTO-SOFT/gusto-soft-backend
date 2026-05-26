@@ -5,12 +5,13 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { MesaEstado } from '../common/enums/table-status.enum';
 import { PedidoEstado } from '../common/enums/order-status.enum';
 import { errorBody } from '../common/utils/error-response';
 import { minutesAgo } from '../common/utils/time';
 import { envNumber } from '../config/env';
+import { StockService } from '../inventory/stock.service';
 import { MenuService } from '../menu/menu.service';
 import { MesasService } from '../tables/tables.service';
 import { NotificacionesService } from '../notifications/notifications.service';
@@ -30,8 +31,10 @@ export class PedidosService {
     @InjectRepository(PedidoDetalle) private readonly detallesRepo: Repository<PedidoDetalle>,
     @InjectRepository(PedidoEstadoHistorial)
     private readonly historialRepo: Repository<PedidoEstadoHistorial>,
+    private readonly dataSource: DataSource,
     private readonly mesasService: MesasService,
     private readonly menuService: MenuService,
+    private readonly stockService: StockService,
     private readonly notificacionesService: NotificacionesService,
     private readonly cocinaGateway: CocinaEventosGateway,
     private readonly notificacionesGateway: NotificacionesGateway,
@@ -103,18 +106,33 @@ export class PedidosService {
   }
 
   async enviar(id: number) {
-    const pedido = await this.findById(id);
-    if (pedido.estado !== PedidoEstado.BORRADOR) {
-      throw new ConflictException(errorBody('PEDIDO_YA_ENVIADO', 'Este pedido ya fue enviado a cocina'));
-    }
-    if (!pedido.detalles?.length) {
-      throw new UnprocessableEntityException(errorBody('PEDIDO_SIN_ITEMS', 'No puedes enviar un pedido sin productos'));
-    }
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const pedido = await manager.findOne(Pedido, {
+        where: { id },
+        relations: {
+          detalles: { producto: { recipeIngredients: { ingrediente: true }, ingredientes: true } },
+          historialEstados: true,
+          mesa: true,
+          mesero: true,
+        },
+      });
+      if (!pedido) {
+        throw new NotFoundException(errorBody('PEDIDO_NO_ENCONTRADO', 'Pedido no encontrado'));
+      }
+      if (pedido.estado !== PedidoEstado.BORRADOR) {
+        throw new ConflictException(errorBody('PEDIDO_YA_ENVIADO', 'Este pedido ya fue enviado a cocina'));
+      }
+      if (!pedido.detalles?.length) {
+        throw new UnprocessableEntityException(errorBody('PEDIDO_SIN_ITEMS', 'No puedes enviar un pedido sin productos'));
+      }
 
-    pedido.estado = PedidoEstado.PENDIENTE;
-    pedido.sentAt = new Date();
-    pedido.historialEstados.push(this.historialRepo.create({ estado: PedidoEstado.PENDIENTE }));
-    const saved = await this.pedidosRepo.save(pedido);
+      await this.stockService.registrarSalidas(manager, this.buildConsumosStock(pedido));
+
+      pedido.estado = PedidoEstado.PENDIENTE;
+      pedido.sentAt = new Date();
+      pedido.historialEstados.push(manager.create(PedidoEstadoHistorial, { estado: PedidoEstado.PENDIENTE }));
+      return manager.save(pedido);
+    });
     const response = this.toResponse(saved);
     this.cocinaGateway.emitPedidoCreado(response);
     return response;
@@ -210,6 +228,32 @@ export class PedidosService {
       );
     }
     return productos;
+  }
+
+  private buildConsumosStock(pedido: Pedido) {
+    const consumos = new Map<number, { cantidad: number; motivo: string; usuarioId: number | null }>();
+    for (const detalle of pedido.detalles) {
+      const recipeItems = detalle.producto?.recipeIngredients?.length
+        ? detalle.producto.recipeIngredients.map((recipe) => ({
+            ingredienteId: recipe.ingredienteId,
+            cantidadIngrediente: Number(recipe.cantidadIngrediente),
+          }))
+        : detalle.producto?.ingredientes?.map((ingrediente) => ({
+            ingredienteId: ingrediente.id,
+            cantidadIngrediente: 1,
+          })) ?? [];
+
+      for (const recipe of recipeItems) {
+        const cantidad = detalle.cantidad * recipe.cantidadIngrediente;
+        const current = consumos.get(recipe.ingredienteId);
+        consumos.set(recipe.ingredienteId, {
+          cantidad: (current?.cantidad ?? 0) + cantidad,
+          motivo: `Consumo por pedido ${pedido.id}`,
+          usuarioId: pedido.meseroId,
+        });
+      }
+    }
+    return [...consumos.entries()].map(([ingredienteId, consumo]) => ({ ingredienteId, ...consumo }));
   }
 
   toResponse(pedido: Pedido) {

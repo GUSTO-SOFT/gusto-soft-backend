@@ -4,14 +4,18 @@ import { DataSource } from 'typeorm';
 import { CategoriaProducto } from '../common/enums/product-category.enum';
 import { MesaEstado } from '../common/enums/table-status.enum';
 import { Rol } from '../common/enums/role.enum';
+import { UnitMeasure } from '../common/enums/unit-measure.enum';
 import { UsuarioEstado } from '../common/enums/user-status.enum';
 import { Ingrediente } from '../inventory/entities/ingredient.entity';
+import { MovimientoStock } from '../inventory/entities/stock-movement.entity';
+import { ProductRecipeIngredient } from '../menu/entities/product-recipe-ingredient.entity';
 import { Producto } from '../menu/entities/product.entity';
 import { Mesa } from '../tables/entities/restaurant-table.entity';
 import { Notificacion } from '../notifications/entities/notification.entity';
 import { PedidoDetalle } from '../orders/entities/order-item.entity';
 import { PedidoEstadoHistorial } from '../orders/entities/order-status-history.entity';
 import { Pedido } from '../orders/entities/order.entity';
+import { SystemParameter } from '../reports/entities/system-parameter.entity';
 import { Usuario } from '../users/entities/user.entity';
 
 const dataSource = new DataSource({
@@ -20,9 +24,21 @@ const dataSource = new DataSource({
   port: Number(process.env.DB_PORT ?? 3306),
   username: process.env.DB_USERNAME ?? 'root',
   password: process.env.DB_PASSWORD ?? '',
-  database: process.env.DB_DATABASE ?? 'gusto_soft',
-  synchronize: process.env.DB_SYNC !== 'false',
-  entities: [Usuario, Mesa, Ingrediente, Producto, Pedido, PedidoDetalle, PedidoEstadoHistorial, Notificacion],
+  database: process.env.DB_DATABASE ?? process.env.DB_NAME ?? 'gusto_soft',
+  synchronize: (process.env.DB_SYNC ?? process.env.TYPEORM_SYNCHRONIZE) !== 'false',
+  entities: [
+    Usuario,
+    Mesa,
+    Ingrediente,
+    MovimientoStock,
+    Producto,
+    ProductRecipeIngredient,
+    Pedido,
+    PedidoDetalle,
+    PedidoEstadoHistorial,
+    Notificacion,
+    SystemParameter,
+  ],
   timezone: 'Z',
 });
 
@@ -33,7 +49,7 @@ async function seed() {
   const mesasRepo = dataSource.getRepository(Mesa);
   const ingredientesRepo = dataSource.getRepository(Ingrediente);
   const productosRepo = dataSource.getRepository(Producto);
-  const passwordHash = await bcrypt.hash('Password123!', Number(process.env.BCRYPT_ROUNDS ?? 10));
+  const passwordHash = await bcrypt.hash('Password123!', Number(process.env.BCRYPT_ROUNDS ?? process.env.BYCRYPT_ROUNDS ?? 10));
 
   const usuarios = [
     { nombre: 'Admin Demo', email: 'admin@gustosoft.local', rol: Rol.ADMIN },
@@ -62,11 +78,11 @@ async function seed() {
   }
 
   const ingredientesBase = [
-    { nombre: 'Tomate', unidadMedida: 'kg' },
-    { nombre: 'Pan artesanal', unidadMedida: 'unidad' },
-    { nombre: 'Carne de res', unidadMedida: 'kg' },
-    { nombre: 'Queso', unidadMedida: 'kg' },
-    { nombre: 'Cafe', unidadMedida: 'g' },
+    { nombre: 'Tomate', unidadMedida: UnitMeasure.KG, stockActual: '20.000', stockMinimo: '3.000', activo: true },
+    { nombre: 'Pan artesanal', unidadMedida: UnitMeasure.UNIDAD, stockActual: '80.000', stockMinimo: '10.000', activo: true },
+    { nombre: 'Carne de res', unidadMedida: UnitMeasure.KG, stockActual: '30.000', stockMinimo: '5.000', activo: true },
+    { nombre: 'Queso', unidadMedida: UnitMeasure.KG, stockActual: '12.000', stockMinimo: '2.000', activo: true },
+    { nombre: 'Cafe', unidadMedida: UnitMeasure.G, stockActual: '5000.000', stockMinimo: '500.000', activo: true },
   ];
 
   for (const ingrediente of ingredientesBase) {
@@ -77,6 +93,7 @@ async function seed() {
   }
 
   const ingredientes = await ingredientesRepo.find();
+  const ingredientesByName = new Map(ingredientes.map((ingrediente) => [ingrediente.nombre, ingrediente]));
   const productoExists = await productosRepo.findOne({ where: { nombre: 'Hamburguesa clasica' } });
   if (!productoExists) {
     await productosRepo.save(
@@ -87,9 +104,15 @@ async function seed() {
         tiempoPreparacion: 15,
         imagenUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd',
         activo: true,
-        ingredientes: ingredientes.filter((ingrediente) =>
-          ['Pan artesanal', 'Carne de res', 'Queso', 'Tomate'].includes(ingrediente.nombre),
-        ),
+        ingredientes: ['Pan artesanal', 'Carne de res', 'Queso', 'Tomate']
+          .map((name) => ingredientesByName.get(name))
+          .filter((ingrediente): ingrediente is Ingrediente => Boolean(ingrediente)),
+        recipeIngredients: [
+          { ingredienteId: ingredientesByName.get('Pan artesanal')?.id, cantidadIngrediente: '1.000' },
+          { ingredienteId: ingredientesByName.get('Carne de res')?.id, cantidadIngrediente: '0.180' },
+          { ingredienteId: ingredientesByName.get('Queso')?.id, cantidadIngrediente: '0.040' },
+          { ingredienteId: ingredientesByName.get('Tomate')?.id, cantidadIngrediente: '0.050' },
+        ].map((recipe) => dataSource.getRepository(ProductRecipeIngredient).create(recipe)),
       }),
     );
   }
