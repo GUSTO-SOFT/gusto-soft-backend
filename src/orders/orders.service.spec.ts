@@ -11,6 +11,8 @@ describe('PedidosService', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
+      {} as any,
       { emitPedidoEstado: jest.fn(), emitPedidoCreado: jest.fn() } as any,
       { emitPedidoListo: jest.fn() } as any,
     );
