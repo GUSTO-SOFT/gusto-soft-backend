@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEnum, IsNumber, IsString, MaxLength, Min } from 'class-validator';
+import { UnitMeasure } from '../../common/enums/unit-measure.enum';
 
 export class CreateIngredienteDto {
   @ApiProperty({ example: 'Tomate' })
@@ -7,8 +9,19 @@ export class CreateIngredienteDto {
   @MaxLength(120)
   nombre: string;
 
-  @ApiProperty({ example: 'kg' })
-  @IsString()
-  @MaxLength(40)
-  unidad_medida: string;
+  @ApiProperty({ enum: UnitMeasure, example: UnitMeasure.KG })
+  @IsEnum(UnitMeasure)
+  unidad_medida: UnitMeasure;
+
+  @ApiProperty({ example: 25.5 })
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 3 })
+  @Min(0)
+  stock_actual: number;
+
+  @ApiProperty({ example: 5 })
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 3 })
+  @Min(0)
+  stock_minimo: number;
 }
