@@ -37,27 +37,14 @@ export class MenuService {
     }
 
     try {
-      const saved = await this.dataSource.transaction(async (manager) => {
-        const producto = manager.create(Producto, {
-          nombre: dto.nombre,
-          categoria: dto.categoria,
-          precio: dto.precio.toFixed(2),
-          tiempoPreparacion: dto.tiempo_preparacion,
-          activo: true,
-          ingredientes,
-        });
-        const savedProduct = await manager.save(producto);
-        await manager.save(
-          ProductRecipeIngredient,
-          ingredientesDto.map((ingredienteDto) =>
-            manager.create(ProductRecipeIngredient, {
-              productoId: savedProduct.id,
-              ingredienteId: ingredienteDto.ingrediente_id,
-              cantidadIngrediente: ingredienteDto.cantidad.toFixed(3),
-            }),
-          ),
-        );
-        return manager.findOneOrFail(Producto, { where: { id: savedProduct.id } });
+      const producto = this.productosRepo.create({
+        nombre: dto.nombre,
+        categoria: dto.categoria,
+        precio: dto.precio.toFixed(2),
+        tiempoPreparacion: dto.tiempo_preparacion,
+        imagenUrl: dto.imagen_url ?? null,
+        activo: true,
+        ingredientes,
       });
       return this.toResponse(saved);
     } catch (error) {
@@ -93,6 +80,7 @@ export class MenuService {
       categoria: producto.categoria,
       precio: Number(producto.precio),
       tiempo_preparacion: producto.tiempoPreparacion,
+      imagen_url: producto.imagenUrl,
       activo: producto.activo,
       ingredientes: this.toIngredientsResponse(producto),
       created_at: producto.createdAt,

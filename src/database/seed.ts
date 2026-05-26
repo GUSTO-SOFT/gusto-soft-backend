@@ -102,6 +102,7 @@ async function seed() {
         categoria: CategoriaProducto.PLATO_FUERTE,
         precio: '28000.00',
         tiempoPreparacion: 15,
+        imagenUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd',
         activo: true,
         ingredientes: ['Pan artesanal', 'Carne de res', 'Queso', 'Tomate']
           .map((name) => ingredientesByName.get(name))
