@@ -30,6 +30,9 @@ export class Producto {
   @Column({ name: 'preparation_time' })
   tiempoPreparacion: number;
 
+  @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true })
+  imagenUrl: string | null;
+
   @Column({ name: 'active', default: true })
   activo: boolean;
 
