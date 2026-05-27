@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Rol } from '../common/enums/role.enum';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { QueryDateRangeDto, QueryWasteReportDto } from './dto/query-report-date-range.dto';
+import { QueryAfluenciaDto, QueryDateRangeDto, QueryWasteReportDto } from './dto/query-report-date-range.dto';
 import { ReportExportService } from './report-export.service';
 import { ReportService } from './report.service';
 
@@ -31,6 +31,12 @@ export class ReportController {
   @Header('Content-Type', 'application/json')
   desperdicio(@Query() query: QueryWasteReportDto) {
     return this.reportService.desperdicio(query);
+  }
+
+  @Get('afluencia')
+  @Roles(Rol.ADMIN)
+  afluencia(@Query() query: QueryAfluenciaDto) {
+    return this.reportService.afluencia(query);
   }
 
   private formatResponse(req: Request, res: Response, filename: string, data: Record<string, unknown>[]) {

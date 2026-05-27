@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { FacturacionModule } from './billing/billing.module';
 import { CocinaModule } from './kitchen/kitchen.module';
+import { EmpresaModule } from './company/company.module';
 import { envBoolean, envNumber, envString } from './config/env';
 import { InventarioModule } from './inventory/inventory.module';
 import { MenuModule } from './menu/menu.module';
@@ -31,6 +33,8 @@ import { UsuariosModule } from './users/users.module';
     InventarioModule,
     MenuModule,
     PedidosModule,
+    FacturacionModule,
+    EmpresaModule,
     ReportModule,
     CocinaModule,
     NotificacionesModule,

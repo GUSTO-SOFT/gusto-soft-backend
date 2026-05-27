@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+
 import {
   ArrayMinSize,
   IsArray,
@@ -11,7 +12,9 @@ import {
   IsUrl,
   MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
+
 import { CategoriaProducto } from '../../common/enums/product-category.enum';
 
 export class ProductIngredientDto {
@@ -50,14 +53,25 @@ export class CreateProductoDto {
   @Min(1)
   tiempo_preparacion: number;
 
-  @ApiPropertyOptional({ example: 'https://cdn.gustosoft.local/productos/hamburguesa-clasica.jpg' })
+  @ApiPropertyOptional({
+    example:
+      'https://cdn.gustosoft.local/productos/hamburguesa-clasica.jpg',
+  })
   @IsOptional()
   @IsString()
   @IsUrl({ require_protocol: true })
   @MaxLength(500)
   imagen_url?: string;
 
-  @ApiProperty({ type: [Number], example: [1, 2] })
+  @ApiProperty({
+    type: [ProductIngredientDto],
+    example: [
+      {
+        ingrediente_id: 1,
+        cantidad: 0.25,
+      },
+    ],
+  })
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })

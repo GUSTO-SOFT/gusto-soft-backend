@@ -1,19 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, Matches, MinLength } from 'class-validator';
+import { IsEmail, IsString, Matches, MaxLength } from 'class-validator';
 import { PASSWORD_COMPLEXITY_MESSAGE, PASSWORD_COMPLEXITY_REGEX } from './password-rules';
 
-export class RegisterDto {
-  @ApiProperty({ example: 'Admin Demo' })
-  @IsString()
-  nombre: string;
-
+export class ForgotPasswordDto {
   @ApiProperty({ example: 'admin@gustosoft.local' })
   @IsEmail()
+  @MaxLength(160)
   email: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ example: 'token-recibido' })
+  @IsString()
+  token: string;
 
   @ApiProperty({ example: 'Password123!' })
   @IsString()
-  @MinLength(8)
   @Matches(PASSWORD_COMPLEXITY_REGEX, { message: PASSWORD_COMPLEXITY_MESSAGE })
-  password: string;
+  nueva_password: string;
 }
