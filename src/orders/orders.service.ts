@@ -158,19 +158,16 @@ export class PedidosService {
     const response = this.toResponse(saved);
     this.cocinaGateway.emitPedidoEstado(response);
 
+    if (dto.estado === PedidoEstado.EN_PREPARACION) {
+      const payload = this.buildNotificacionEstadoPayload(saved, 'pedido.en_preparacion');
+      this.notificacionesGateway.emitPedidoEstado(payload);
+      await this.notificacionesService.createPedidoEnPreparacion(saved, true);
+    }
+
     if (dto.estado === PedidoEstado.LISTO) {
-      const payload = {
-        pedido_id: saved.id,
-        mesa_id: saved.mesaId,
-        mesa_numero: saved.mesa?.numero,
-        items_listos: saved.detalles.map((detalle) => ({
-          producto_id: detalle.productoId,
-          nombre: detalle.producto?.nombre,
-          cantidad: detalle.cantidad,
-        })),
-        mensaje: `Pedido de Mesa ${saved.mesa?.numero ?? saved.mesaId} esta listo para entregar!`,
-      };
+      const payload = this.buildNotificacionEstadoPayload(saved, 'pedido.listo');
       this.notificacionesGateway.emitPedidoListo(payload);
+      this.notificacionesGateway.emitPedidoEstado(payload);
       await this.notificacionesService.createPedidoListo(saved, true);
     }
 
@@ -272,6 +269,9 @@ export class PedidosService {
         producto_nombre: detalle.producto?.nombre,
         categoria: detalle.producto?.categoria,
         precio: detalle.producto?.precio ? Number(detalle.producto.precio) : null,
+        tiempo_preparacion: detalle.producto?.tiempoPreparacion
+          ? this.normalizePreparationMinutes(detalle.producto.tiempoPreparacion)
+          : null,
         cantidad: detalle.cantidad,
         notas: detalle.notas,
       })) ?? [],
@@ -292,5 +292,35 @@ export class PedidosService {
       hace_minutos: antiguedad,
       resaltar_por_antiguedad: antiguedad >= staleMinutes,
     };
+  }
+
+  private buildNotificacionEstadoPayload(pedido: Pedido, evento: string) {
+    return {
+      evento,
+      pedido_id: pedido.id,
+      mesa_id: pedido.mesaId,
+      mesa_numero: pedido.mesa?.numero,
+      mesero_id: pedido.meseroId,
+      estado: pedido.estado,
+      items: pedido.detalles.map((detalle) => ({
+        producto_id: detalle.productoId,
+        nombre: detalle.producto?.nombre,
+        cantidad: detalle.cantidad,
+        tiempo_preparacion: detalle.producto?.tiempoPreparacion
+          ? this.normalizePreparationMinutes(detalle.producto.tiempoPreparacion)
+          : null,
+      })),
+      mensaje:
+        pedido.estado === PedidoEstado.LISTO
+          ? `Pedido de Mesa ${pedido.mesa?.numero ?? pedido.mesaId} esta listo para entregar!`
+          : `Pedido de Mesa ${pedido.mesa?.numero ?? pedido.mesaId} esta en preparacion`,
+    };
+  }
+
+  private normalizePreparationMinutes(value: number) {
+    if (value > 180 && value % 60 === 0) {
+      return value / 60;
+    }
+    return value;
   }
 }

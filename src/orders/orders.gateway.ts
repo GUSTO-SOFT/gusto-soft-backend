@@ -26,4 +26,14 @@ export class NotificacionesGateway {
   emitPedidoListo(payload: unknown) {
     this.server?.emit('pedido.listo', payload);
   }
+
+  emitPedidoEstado(payload: { evento?: string; mesero_id?: number; [key: string]: unknown }) {
+    this.server?.emit('pedido.estado', payload);
+    if (payload.evento) {
+      this.server?.emit(payload.evento, payload);
+    }
+    if (payload.mesero_id) {
+      this.server?.to(`mesero:${payload.mesero_id}`).emit('pedido.estado', payload);
+    }
+  }
 }

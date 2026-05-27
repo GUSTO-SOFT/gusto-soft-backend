@@ -48,3 +48,17 @@ export class InventarioController {
     return this.stockService.findMovimientos(id, query);
   }
 }
+
+@ApiTags('inventario')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('inventario/alertas')
+export class InventarioAlertasController {
+  constructor(private readonly stockService: StockService) {}
+
+  @Get()
+  @Roles(Rol.ADMIN, Rol.CHEF)
+  findActivas() {
+    return this.stockService.findAlertasActivas();
+  }
+}

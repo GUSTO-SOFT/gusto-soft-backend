@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDate, IsInt, IsOptional, Min } from 'class-validator';
+import { IsDate, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class QueryDateRangeDto {
   @ApiPropertyOptional({ example: '2026-05-01T00:00:00.000Z' })
@@ -23,4 +23,19 @@ export class QueryWasteReportDto extends QueryDateRangeDto {
   @IsInt()
   @Min(1)
   ingrediente_id?: number;
+}
+
+export class QueryAfluenciaDto extends QueryDateRangeDto {
+  @ApiPropertyOptional({ example: '1h' })
+  @IsOptional()
+  @IsString()
+  granularidad?: string;
+
+  @ApiPropertyOptional({ example: 5 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(6)
+  dia_semana?: number;
 }

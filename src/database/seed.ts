@@ -1,12 +1,18 @@
 import 'dotenv/config';
 import * as bcrypt from 'bcryptjs';
 import { DataSource } from 'typeorm';
+import { Cuenta } from '../billing/entities/account.entity';
+import { AuditoriaFacturacion } from '../billing/entities/billing-audit.entity';
+import { FacturaEnvio } from '../billing/entities/invoice-email.entity';
+import { FacturaElectronica } from '../billing/entities/invoice.entity';
+import { Empresa } from '../company/entities/company.entity';
 import { CategoriaProducto } from '../common/enums/product-category.enum';
 import { MesaEstado } from '../common/enums/table-status.enum';
 import { Rol } from '../common/enums/role.enum';
 import { UnitMeasure } from '../common/enums/unit-measure.enum';
 import { UsuarioEstado } from '../common/enums/user-status.enum';
 import { Ingrediente } from '../inventory/entities/ingredient.entity';
+import { AlertaInventario } from '../inventory/entities/inventory-alert.entity';
 import { MovimientoStock } from '../inventory/entities/stock-movement.entity';
 import { ProductRecipeIngredient } from '../menu/entities/product-recipe-ingredient.entity';
 import { Producto } from '../menu/entities/product.entity';
@@ -31,6 +37,7 @@ const dataSource = new DataSource({
     Mesa,
     Ingrediente,
     MovimientoStock,
+    AlertaInventario,
     Producto,
     ProductRecipeIngredient,
     Pedido,
@@ -38,6 +45,11 @@ const dataSource = new DataSource({
     PedidoEstadoHistorial,
     Notificacion,
     SystemParameter,
+    Cuenta,
+    AuditoriaFacturacion,
+    FacturaElectronica,
+    FacturaEnvio,
+    Empresa,
   ],
   timezone: 'Z',
 });
@@ -55,6 +67,7 @@ async function seed() {
     { nombre: 'Admin Demo', email: 'admin@gustosoft.local', rol: Rol.ADMIN },
     { nombre: 'Mesero Demo', email: 'mesero@gustosoft.local', rol: Rol.MESERO },
     { nombre: 'Chef Demo', email: 'chef@gustosoft.local', rol: Rol.CHEF },
+    { nombre: 'Cajero Demo', email: 'cajero@gustosoft.local', rol: Rol.CAJERO },
   ];
 
   for (const usuario of usuarios) {

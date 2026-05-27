@@ -18,6 +18,12 @@ export class Usuario {
   @Column({ name: 'password_hash' })
   passwordHash: string;
 
+  @Column({ name: 'password_reset_token_hash', type: 'varchar', length: 128, nullable: true })
+  passwordResetTokenHash: string | null;
+
+  @Column({ name: 'password_reset_expires_at', type: 'timestamp', nullable: true })
+  passwordResetExpiresAt: Date | null;
+
   @Column({ name: 'role', type: 'enum', enum: Rol })
   rol: Rol;
 
