@@ -8,6 +8,7 @@ import { errorBody } from '../common/utils/error-response';
 import { minutesAgo } from '../common/utils/time';
 import { UsuariosService } from '../users/users.service';
 import { AsignarMeseroDto } from './dto/assign-waiter.dto';
+import { CrearMesaDto } from './dto/create-table.dto';
 import { QueryMesasDto } from './dto/query-tables.dto';
 import { Mesa } from './entities/restaurant-table.entity';
 import { MesasGateway } from './tables.gateway';
@@ -38,6 +39,21 @@ export class MesasService {
         total_pages: Math.ceil(total / query.limit),
       },
     };
+  }
+
+  async create(dto: CrearMesaDto) {
+    const duplicated = await this.mesasRepo.findOne({ where: { numero: dto.numero } });
+    if (duplicated) {
+      throw new ConflictException(errorBody('MESA_DUPLICADA', 'Ya existe una mesa con ese numero'));
+    }
+
+    const mesa = await this.mesasRepo.save(
+      this.mesasRepo.create({
+        numero: dto.numero,
+        estado: MesaEstado.DISPONIBLE,
+      }),
+    );
+    return this.toResponse(mesa);
   }
 
   async abrir(id: number) {

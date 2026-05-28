@@ -1,20 +1,15 @@
-import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectDataSource } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 import { DataSource } from 'typeorm';
-import { Rol } from '../common/enums/role.enum';
-import { UsuarioEstado } from '../common/enums/user-status.enum';
 import { errorBody } from '../common/utils/error-response';
-import { Empresa } from '../company/entities/company.entity';
 import { envBoolean, envNumber } from '../config/env';
 import { Usuario } from '../users/entities/user.entity';
 import { UsuariosService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-recovery.dto';
-import { RegisterCompanyDto } from './dto/register-company.dto';
-import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -23,70 +18,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
-
-  async register(dto: RegisterDto) {
-    const exists = await this.usuariosService.findByEmail(dto.email);
-    if (exists) {
-      throw new ConflictException(errorBody('USUARIO_DUPLICADO', 'Ya existe un usuario con ese email'));
-    }
-
-    const rounds = envNumber('BCRYPT_ROUNDS', 10);
-    const passwordHash = await bcrypt.hash(dto.password, rounds);
-    const usuario = await this.usuariosService.create({ ...dto, passwordHash, rol: Rol.ADMIN });
-    return this.loginWithUser(usuario);
-  }
-
-  async registerCompany(dto: RegisterCompanyDto) {
-    const exists = await this.usuariosService.findByEmail(dto.admin_email);
-    if (exists) {
-      throw new ConflictException(errorBody('USUARIO_DUPLICADO', 'Ya existe un usuario con ese email'));
-    }
-
-    const result = await this.dataSource.transaction(async (manager) => {
-      const empresas = await manager.count(Empresa);
-      if (empresas > 0) {
-        throw new ConflictException(
-          errorBody('EMPRESA_YA_REGISTRADA', 'La empresa ya fue registrada'),
-        );
-      }
-
-      const empresa = await manager.save(
-        manager.create(Empresa, {
-          nombre: dto.nombre_establecimiento,
-          nit: dto.nit,
-          email: dto.empresa_email ?? dto.admin_email,
-          telefono: dto.empresa_telefono ?? null,
-          direccion: dto.empresa_direccion ?? null,
-          logoUrl: null,
-        }),
-      );
-
-      const passwordHash = await bcrypt.hash(dto.admin_password, envNumber('BCRYPT_ROUNDS', 10));
-      const admin = await manager.save(
-        manager.create(Usuario, {
-          nombre: dto.admin_nombre,
-          email: dto.admin_email,
-          passwordHash,
-          rol: Rol.ADMIN,
-          estado: UsuarioEstado.ACTIVO,
-        }),
-      );
-
-      return { empresa, admin };
-    });
-
-    return {
-      ...this.loginWithUser(result.admin),
-      empresa: {
-        id: result.empresa.id,
-        nombre: result.empresa.nombre,
-        nit: result.empresa.nit,
-        email: result.empresa.email,
-        telefono: result.empresa.telefono,
-        direccion: result.empresa.direccion,
-      },
-    };
-  }
 
   async forgotPassword(dto: ForgotPasswordDto) {
     const usuario = await this.usuariosService.findByEmail(dto.email);

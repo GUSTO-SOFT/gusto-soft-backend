@@ -5,6 +5,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Rol } from '../common/enums/role.enum';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { AsignarMeseroDto } from './dto/assign-waiter.dto';
+import { CrearMesaDto } from './dto/create-table.dto';
 import { QueryMesasDto } from './dto/query-tables.dto';
 import { MesasService } from './tables.service';
 
@@ -19,6 +20,12 @@ export class MesasController {
   @Roles(Rol.ADMIN, Rol.MESERO, Rol.CHEF)
   findAll(@Query() query: QueryMesasDto) {
     return this.mesasService.findAll(query);
+  }
+
+  @Post()
+  @Roles(Rol.ADMIN)
+  create(@Body() dto: CrearMesaDto) {
+    return this.mesasService.create(dto);
   }
 
   @Post(':id/abrir')
