@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConflictException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -9,6 +9,7 @@ import { errorBody } from '../common/utils/error-response';
 import { envNumber } from '../config/env';
 import { CreateMeseroDto, CreateUsuarioDto } from './dto/create-user.dto';
 import { QueryUsuariosDto } from './dto/query-users.dto';
+import { UpdateUsuarioDto } from './dto/update-user-admin.dto';
 import { Usuario } from './entities/user.entity';
 
 type CreateUsuario = Pick<Usuario, 'nombre' | 'email' | 'passwordHash' | 'rol'>;
@@ -57,6 +58,38 @@ export class UsuariosService {
     return this.findAll({ rol: Rol.MESERO, estado: UsuarioEstado.ACTIVO });
   }
 
+  async updateByAdmin(id: number, dto: UpdateUsuarioDto) {
+    const usuario = await this.findOrFail(id);
+
+    if (dto.email !== undefined && dto.email !== usuario.email) {
+      const exists = await this.findByEmail(dto.email);
+      if (exists && exists.id !== id) {
+        throw new ConflictException(errorBody('USUARIO_DUPLICADO', 'Ya existe un usuario con ese email'));
+      }
+      usuario.email = dto.email;
+    }
+
+    if (dto.nombre !== undefined) {
+      usuario.nombre = dto.nombre;
+    }
+    if (dto.rol !== undefined) {
+      usuario.rol = dto.rol;
+    }
+    if (dto.estado !== undefined) {
+      usuario.estado = dto.estado;
+    }
+
+    return this.toPublic(await this.usuariosRepo.save(usuario));
+  }
+
+  async updateRol(id: number, rol: Rol) {
+    return this.updateByAdmin(id, { rol });
+  }
+
+  async updateEstado(id: number, estado: UsuarioEstado) {
+    return this.updateByAdmin(id, { estado });
+  }
+
   private async createWithPassword(dto: CreateUsuarioDto) {
     const exists = await this.findByEmail(dto.email);
     if (exists) {
@@ -71,6 +104,14 @@ export class UsuariosService {
       rol: dto.rol,
     });
     return this.toPublic(usuario);
+  }
+
+  private async findOrFail(id: number) {
+    const usuario = await this.findById(id);
+    if (!usuario) {
+      throw new NotFoundException(errorBody('USUARIO_NO_ENCONTRADO', 'Usuario no encontrado'));
+    }
+    return usuario;
   }
 
   toPublic(usuario: Usuario) {
