@@ -15,13 +15,13 @@ export class MovimientoStock {
   @JoinColumn({ name: 'ingredient_id' })
   ingrediente: Ingrediente;
 
-  @Column({ type: 'enum', enum: StockMovementType })
+  @Column({ name: 'type', type: 'enum', enum: StockMovementType })
   tipo: StockMovementType;
 
-  @Column({ type: 'decimal', precision: 12, scale: 3 })
+  @Column({ name: 'quantity', type: 'decimal', precision: 12, scale: 3 })
   cantidad: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ name: 'reason', type: 'varchar', length: 255 })
   motivo: string;
 
   @Column({ name: 'user_id', nullable: true })
@@ -31,6 +31,6 @@ export class MovimientoStock {
   @JoinColumn({ name: 'user_id' })
   usuario: Usuario | null;
 
-  @CreateDateColumn({ name: 'fecha_utc', type: 'timestamp' })
+  @CreateDateColumn({ name: 'timestamp_utc', type: 'timestamp' })
   fechaUtc: Date;
 }

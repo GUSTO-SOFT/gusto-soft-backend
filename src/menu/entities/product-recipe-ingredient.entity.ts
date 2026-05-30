@@ -22,6 +22,6 @@ export class ProductRecipeIngredient {
   @JoinColumn({ name: 'ingredient_id' })
   ingrediente: Ingrediente;
 
-  @Column({ name: 'quantity_ingredient', type: 'decimal', precision: 12, scale: 3, default: 1 })
+  @Column({ name: 'ingredient_quantity', type: 'decimal', precision: 12, scale: 3, default: 1 })
   cantidadIngrediente: string;
 }

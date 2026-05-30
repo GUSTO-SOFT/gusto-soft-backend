@@ -45,7 +45,7 @@ export class CuentasController {
   }
 
   @Post(':id/cerrar')
-  @Roles(Rol.CAJERO)
+  @Roles(Rol.CAJERO, Rol.ADMIN)
   cerrar(@Param('id', ParseIntPipe) id: number, @Body() dto: CloseAccountDto, @Req() req: AuthRequest) {
     return this.facturacionService.cerrarCuenta(id, req.user.sub, dto);
   }

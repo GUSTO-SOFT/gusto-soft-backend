@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Ingrediente } from './ingredient.entity';
 
-@Entity('alertas_inventario')
+@Entity('inventory_alerts')
 export class AlertaInventario {
   @PrimaryGeneratedColumn()
   id: number;

@@ -24,6 +24,9 @@ export class Ingrediente {
   @Column({ name: 'active', default: true })
   activo: boolean;
 
+  @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true })
+  imagenUrl: string | null;
+
   @ManyToMany(() => Producto, (producto) => producto.ingredientes)
   productos: Producto[];
 

@@ -11,7 +11,7 @@ import { ProductImagesService } from './product-images.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Producto, ProductRecipeIngredient, AuditoriaMenu]), InventarioModule],
-  controllers: [MenuController, ProductImagesController],
+  controllers: [ProductImagesController, MenuController],
   providers: [MenuService, ProductImagesService],
   exports: [MenuService, TypeOrmModule],
 })

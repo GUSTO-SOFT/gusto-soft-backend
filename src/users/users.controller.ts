@@ -35,7 +35,7 @@ export class UsuariosController {
   }
 
   @Get('meseros/disponibles')
-  @Roles(Rol.ADMIN)
+  @Roles(Rol.ADMIN, Rol.MESERO)
   meserosDisponibles() {
     return this.usuariosService.findEligibleMeseros();
   }
