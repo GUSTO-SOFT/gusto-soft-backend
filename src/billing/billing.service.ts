@@ -6,7 +6,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, MoreThanOrEqual, Repository } from 'typeorm';
 import { PedidoEstado } from '../common/enums/order-status.enum';
 import { MesaEstado } from '../common/enums/table-status.enum';
 import { errorBody } from '../common/utils/error-response';
@@ -25,6 +25,7 @@ import { CuentaEstado, DescuentoTipo, FacturaEnvioEstado, FacturaEstado } from '
 
 type CuentaDocumento = {
   mesa_id: number;
+  pedido_ids: number[];
   items: Array<{
     producto_id: number;
     producto: string;
@@ -50,18 +51,10 @@ export class FacturacionService {
   ) {}
 
   async cuentaMesa(mesaId: number) {
-    const documento = await this.buildCuentaDocumento(mesaId);
-    const cuenta = await this.cuentasRepo.findOne({
-      where: { mesaId, estado: CuentaEstado.ABIERTA },
-      order: { id: 'DESC' },
+    return this.dataSource.transaction(async (manager) => {
+      const cuenta = await this.persistCuentaFromMesa(manager, mesaId);
+      return this.toCuentaResponse(cuenta);
     });
-    return {
-      id: cuenta?.id ?? mesaId,
-      estado: cuenta?.estado ?? CuentaEstado.ABIERTA,
-      descuento: cuenta ? Number(cuenta.descuento) : 0,
-      total_neto: cuenta ? Number(cuenta.totalNeto) : documento.total_bruto,
-      ...documento,
-    };
   }
 
   async aplicarDescuento(id: number, dto: ApplyDiscountDto, usuarioId: number) {
@@ -111,6 +104,11 @@ export class FacturacionService {
       mesa.openedAt = null;
       mesa.meseroId = null;
       await manager.save(mesa);
+
+      const pedidoIds = this.extractCuentaPedidoIds(resolved);
+      if (pedidoIds.length) {
+        await manager.update(Pedido, { id: In(pedidoIds) }, { estado: PedidoEstado.ENTREGADO, deliveredAt: closedAt });
+      }
 
       resolved.estado = CuentaEstado.CERRADA;
       resolved.closedAt = closedAt;
@@ -215,15 +213,28 @@ export class FacturacionService {
     cuenta.impuestos = documento.impuestos.toFixed(2);
     cuenta.totalBruto = documento.total_bruto.toFixed(2);
     cuenta.totalNeto = (documento.total_bruto - Number(cuenta.descuento ?? 0)).toFixed(2);
+    cuenta.metadata = { pedido_ids: documento.pedido_ids };
 
     return manager.save(cuenta);
   }
 
   private async buildCuentaDocumento(mesaId: number, manager: EntityManager = this.dataSource.manager): Promise<CuentaDocumento> {
+    const mesa = await manager.findOne(Mesa, { where: { id: mesaId } });
+    if (!mesa) {
+      throw new NotFoundException(errorBody('MESA_NO_ENCONTRADA', 'Mesa no encontrada'));
+    }
+    if (mesa.estado !== MesaEstado.OCUPADA || !mesa.openedAt) {
+      throw new UnprocessableEntityException(errorBody('CUENTA_SIN_ITEMS', 'La mesa no tiene una cuenta abierta'));
+    }
+
     const pedidos = await manager.find(Pedido, {
-      where: { mesaId, estado: PedidoEstado.ENTREGADO },
+      where: {
+        mesaId,
+        estado: In([PedidoEstado.PENDIENTE, PedidoEstado.EN_PREPARACION, PedidoEstado.LISTO, PedidoEstado.ENTREGADO]),
+        ...(mesa.openedAt ? { sentAt: MoreThanOrEqual(mesa.openedAt) } : {}),
+      },
       relations: ['detalles', 'detalles.producto'],
-      order: { deliveredAt: 'ASC' },
+      order: { sentAt: 'ASC' },
     });
     const detalles = pedidos.flatMap((pedido) => pedido.detalles ?? []);
     if (!detalles.length) {
@@ -255,10 +266,22 @@ export class FacturacionService {
     const impuestos = Number((subtotal * this.taxRate).toFixed(2));
     return {
       mesa_id: mesaId,
+      pedido_ids: pedidos.map((pedido) => pedido.id),
       items: [...byProduct.values()],
       impuestos,
       total_bruto: Number((subtotal + impuestos).toFixed(2)),
     };
+  }
+
+  private extractCuentaPedidoIds(cuenta: Cuenta) {
+    const metadata = cuenta.metadata as { pedido_ids?: unknown } | null;
+    if (!Array.isArray(metadata?.pedido_ids)) {
+      return [];
+    }
+
+    return metadata.pedido_ids
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0);
   }
 
   private calculateDiscount(dto: ApplyDiscountDto, totalBruto: number) {

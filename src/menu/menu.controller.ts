@@ -46,7 +46,7 @@ export class MenuController {
   }
 
   @Get()
-  @Roles(Rol.ADMIN, Rol.MESERO)
+  @Roles(Rol.ADMIN, Rol.MESERO, Rol.CHEF)
   findAll(@Query() query: QueryProductosDto) {
     return this.menuService.findAll(query);
   }

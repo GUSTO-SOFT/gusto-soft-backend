@@ -75,32 +75,19 @@ export class PedidosService {
       throw new ConflictException(errorBody('PEDIDO_NO_EDITABLE', 'Este pedido ya no puede editarse'));
     }
 
-    const detallesByProduct = new Map<number, PedidoDetalle>();
-    for (const detalle of pedido.detalles ?? []) {
-      detallesByProduct.set(detalle.productoId, detalle);
-    }
-
     const productos = await this.assertProductosDisponibles(dto.detalles.map((detalle) => detalle.producto_id));
     const productosById = new Map(productos.map((producto) => [producto.id, producto]));
 
-    for (const detalleDto of dto.detalles) {
-      const existing = detallesByProduct.get(detalleDto.producto_id);
-      if (existing) {
-        existing.cantidad = detalleDto.cantidad;
-        if (Object.prototype.hasOwnProperty.call(detalleDto, 'notas')) {
-          existing.notas = detalleDto.notas ?? null;
-        }
-      } else {
-        pedido.detalles.push(
-          this.detallesRepo.create({
-            productoId: detalleDto.producto_id,
-            producto: productosById.get(detalleDto.producto_id),
-            cantidad: detalleDto.cantidad,
-            notas: detalleDto.notas ?? null,
-          }),
-        );
-      }
-    }
+    await this.detallesRepo.delete({ pedidoId: id });
+    pedido.detalles = dto.detalles.map((detalleDto) =>
+      this.detallesRepo.create({
+        pedidoId: id,
+        productoId: detalleDto.producto_id,
+        producto: productosById.get(detalleDto.producto_id),
+        cantidad: detalleDto.cantidad,
+        notas: detalleDto.notas ?? null,
+      }),
+    );
 
     return this.toResponse(await this.pedidosRepo.save(pedido));
   }
@@ -189,9 +176,9 @@ export class PedidosService {
     return response;
   }
 
-  async findCocina(estados: PedidoEstado[]) {
+  async findCocina(estados: PedidoEstado[], meseroId?: number) {
     const pedidos = await this.pedidosRepo.find({
-      where: { estado: In(estados) },
+      where: { estado: In(estados), ...(meseroId ? { meseroId } : {}) },
       relations: { detalles: { producto: true }, historialEstados: true, mesa: true, mesero: true },
       order: { createdAt: 'ASC' },
     });
@@ -286,7 +273,7 @@ export class PedidosService {
 
   toKdsResponse(pedido: Pedido) {
     const staleMinutes = envNumber('KDS_STALE_MINUTES', 15);
-    const antiguedad = minutesAgo(pedido.createdAt) ?? 0;
+    const antiguedad = minutesAgo(pedido.sentAt ?? pedido.createdAt) ?? 0;
     return {
       ...this.toResponse(pedido),
       hace_minutos: antiguedad,

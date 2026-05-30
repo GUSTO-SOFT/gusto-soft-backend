@@ -75,17 +75,18 @@ export class MenuService {
       });
 
       const saved = await this.productosRepo.save(producto);
+      const savedWithRelations = await this.findById(saved.id);
       await this.auditoriaRepo.save(
         this.auditoriaRepo.create({
           usuarioId,
           accion: 'POST',
           campoModificado: 'producto',
           valorAnterior: null,
-          valorNuevo: JSON.stringify(this.toResponse(saved)),
+          valorNuevo: JSON.stringify(this.toResponse(savedWithRelations)),
           productoId: saved.id,
         }),
       );
-      return this.toResponse(saved);
+      return this.toResponse(savedWithRelations);
     } catch (error) {
       throw new ConflictException(
         errorBody('PRODUCTO_NO_CREADO', 'No se pudo crear el producto', error),
@@ -220,6 +221,7 @@ export class MenuService {
     const anterior = producto.imagenUrl;
     producto.imagenUrl = this.productImagesService.buildPublicUrl(filename);
     const saved = await this.productosRepo.save(producto);
+    const savedWithRelations = await this.findById(saved.id);
 
     await this.auditoriaRepo.save(
       this.auditoriaRepo.create({
@@ -232,7 +234,7 @@ export class MenuService {
       }),
     );
 
-    return this.toResponse(saved);
+    return this.toResponse(savedWithRelations);
   }
 
   // RF17: GET /menu/productos/:id/bloqueo
@@ -328,9 +330,11 @@ export class MenuService {
   private toIngredientsResponse(producto: Producto) {
     if (producto.recipeIngredients?.length) {
       return producto.recipeIngredients.map((recipe) => ({
-        id: recipe.ingrediente.id,
-        nombre: recipe.ingrediente.nombre,
-        unidad_medida: recipe.ingrediente.unidadMedida,
+        id: recipe.ingrediente?.id ?? recipe.ingredienteId,
+        nombre: recipe.ingrediente?.nombre ?? '',
+        unidad_medida: recipe.ingrediente?.unidadMedida,
+        stock_actual: Number(recipe.ingrediente?.stockActual ?? 0),
+        stock_minimo: Number(recipe.ingrediente?.stockMinimo ?? 0),
         cantidad: Number(recipe.cantidadIngrediente),
       }));
     }
@@ -339,6 +343,8 @@ export class MenuService {
         id: ingrediente.id,
         nombre: ingrediente.nombre,
         unidad_medida: ingrediente.unidadMedida,
+        stock_actual: Number(ingrediente.stockActual),
+        stock_minimo: Number(ingrediente.stockMinimo),
         cantidad: 1,
       })) ?? []
     );
