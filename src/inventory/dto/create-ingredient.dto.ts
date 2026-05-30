@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsNumber, IsString, MaxLength, Min } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString, IsUrl, MaxLength, Min } from 'class-validator';
 import { UnitMeasure } from '../../common/enums/unit-measure.enum';
 
 export class CreateIngredienteDto {
@@ -24,4 +24,10 @@ export class CreateIngredienteDto {
   @IsNumber({ maxDecimalPlaces: 3 })
   @Min(0)
   stock_minimo: number;
+
+  @IsOptional()
+  @IsString()
+  @IsUrl({ require_protocol: true })
+  @MaxLength(500)
+  imagen_url?: string;
 }

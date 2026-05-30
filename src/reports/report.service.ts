@@ -57,7 +57,7 @@ export class ReportService {
       .innerJoin('recipe.ingrediente', 'ingrediente')
       .select('ingrediente.id', 'ingrediente_id')
       .addSelect('ingrediente.name', 'nombre')
-      .addSelect('SUM(detalle.quantity * recipe.quantity_ingredient)', 'consumo_teorico')
+      .addSelect('SUM(detalle.quantity * recipe.ingredient_quantity)', 'consumo_teorico')
       .where('pedido.status = :estado', { estado: PedidoEstado.ENTREGADO })
       .andWhere('pedido.delivered_at BETWEEN :dateFrom AND :dateTo', { dateFrom, dateTo })
       .andWhere(query.ingrediente_id ? 'ingrediente.id = :ingredienteId' : '1=1', {
@@ -72,9 +72,9 @@ export class ReportService {
       .innerJoin('movimiento.ingrediente', 'ingrediente')
       .select('ingrediente.id', 'ingrediente_id')
       .addSelect('ingrediente.name', 'nombre')
-      .addSelect('SUM(movimiento.cantidad)', 'consumo_real')
-      .where('movimiento.tipo = :tipo', { tipo: StockMovementType.SALIDA })
-      .andWhere('movimiento.fecha_utc BETWEEN :dateFrom AND :dateTo', { dateFrom, dateTo })
+      .addSelect('SUM(movimiento.quantity)', 'consumo_real')
+      .where('movimiento.type = :tipo', { tipo: StockMovementType.SALIDA })
+      .andWhere('movimiento.timestamp_utc BETWEEN :dateFrom AND :dateTo', { dateFrom, dateTo })
       .andWhere(query.ingrediente_id ? 'ingrediente.id = :ingredienteId' : '1=1', {
         ingredienteId: query.ingrediente_id,
       })

@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity('empresa')
+@Entity('companies')
 export class Empresa {
   @PrimaryGeneratedColumn()
   id: number;
@@ -8,7 +8,7 @@ export class Empresa {
   @Column({ name: 'name', length: 160 })
   nombre: string;
 
-  @Column({ name: 'nit', type: 'varchar', length: 40, nullable: true })
+  @Column({ name: 'tax_id', type: 'varchar', length: 40, nullable: true })
   nit: string | null;
 
   @Column({ type: 'varchar', length: 160, nullable: true })

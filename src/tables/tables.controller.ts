@@ -17,7 +17,7 @@ export class MesasController {
   constructor(private readonly mesasService: MesasService) {}
 
   @Get()
-  @Roles(Rol.ADMIN, Rol.MESERO, Rol.CHEF)
+  @Roles(Rol.ADMIN, Rol.MESERO, Rol.CHEF, Rol.CAJERO)
   findAll(@Query() query: QueryMesasDto) {
     return this.mesasService.findAll(query);
   }
