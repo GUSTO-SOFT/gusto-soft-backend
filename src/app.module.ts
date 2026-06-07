@@ -1,32 +1,21 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './auth/auth.module';
-import { FacturacionModule } from './billing/billing.module';
-import { CocinaModule } from './kitchen/kitchen.module';
-import { EmpresaModule } from './company/company.module';
-import { envBoolean, envNumber, envString } from './config/env';
-import { InventarioModule } from './inventory/inventory.module';
-import { MenuModule } from './menu/menu.module';
-import { MesasModule } from './tables/tables.module';
-import { NotificacionesModule } from './notifications/notifications.module';
-import { PedidosModule } from './orders/orders.module';
-import { ReportModule } from './reports/report.module';
-import { UsuariosModule } from './users/users.module';
+import { createTypeOrmOptions } from './config/database.config';
+import { AuthModule } from './modules/auth/auth.module';
+import { FacturacionModule } from './modules/billing/billing.module';
+import { EmpresaModule } from './modules/company/company.module';
+import { InventarioModule } from './modules/inventory/inventory.module';
+import { CocinaModule } from './modules/kitchen/kitchen.module';
+import { MenuModule } from './modules/menu/menu.module';
+import { NotificacionesModule } from './modules/notifications/notifications.module';
+import { PedidosModule } from './modules/orders/orders.module';
+import { ReportModule } from './modules/reports/report.module';
+import { MesasModule } from './modules/tables/tables.module';
+import { UsuariosModule } from './modules/users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: envString('DB_HOST', 'localhost'),
-      port: envNumber('DB_PORT', 3306),
-      username: envString('DB_USERNAME', 'root'),
-      password: envString('DB_PASSWORD', ''),
-      database: envString('DB_DATABASE', envString('DB_NAME', 'gusto_soft')),
-      autoLoadEntities: true,
-      synchronize: envBoolean('DB_SYNC', envBoolean('TYPEORM_SYNCHRONIZE', true)),
-      logging: envBoolean('DB_LOGGING', false),
-      timezone: 'Z',
-    }),
+    TypeOrmModule.forRoot(createTypeOrmOptions()),
     AuthModule,
     UsuariosModule,
     MesasModule,

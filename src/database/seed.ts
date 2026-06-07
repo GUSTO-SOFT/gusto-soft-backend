@@ -1,58 +1,18 @@
 import 'dotenv/config';
 import * as bcrypt from 'bcryptjs';
-import { DataSource } from 'typeorm';
-import { Cuenta } from '../billing/entities/account.entity';
-import { AuditoriaFacturacion } from '../billing/entities/billing-audit.entity';
-import { FacturaEnvio } from '../billing/entities/invoice-email.entity';
-import { FacturaElectronica } from '../billing/entities/invoice.entity';
-import { Empresa } from '../company/entities/company.entity';
 import { CategoriaProducto } from '../common/enums/product-category.enum';
 import { MesaEstado } from '../common/enums/table-status.enum';
 import { Rol } from '../common/enums/role.enum';
 import { UnitMeasure } from '../common/enums/unit-measure.enum';
 import { UsuarioEstado } from '../common/enums/user-status.enum';
-import { Ingrediente } from '../inventory/entities/ingredient.entity';
-import { AlertaInventario } from '../inventory/entities/inventory-alert.entity';
-import { MovimientoStock } from '../inventory/entities/stock-movement.entity';
-import { ProductRecipeIngredient } from '../menu/entities/product-recipe-ingredient.entity';
-import { Producto } from '../menu/entities/product.entity';
-import { Mesa } from '../tables/entities/restaurant-table.entity';
-import { Notificacion } from '../notifications/entities/notification.entity';
-import { PedidoDetalle } from '../orders/entities/order-item.entity';
-import { PedidoEstadoHistorial } from '../orders/entities/order-status-history.entity';
-import { Pedido } from '../orders/entities/order.entity';
-import { SystemParameter } from '../reports/entities/system-parameter.entity';
-import { Usuario } from '../users/entities/user.entity';
+import { AppDataSource } from './data-source';
+import { Ingrediente } from '../modules/inventory/entities/ingredient.entity';
+import { ProductRecipeIngredient } from '../modules/menu/entities/product-recipe-ingredient.entity';
+import { Producto } from '../modules/menu/entities/product.entity';
+import { Mesa } from '../modules/tables/entities/restaurant-table.entity';
+import { Usuario } from '../modules/users/entities/user.entity';
 
-const dataSource = new DataSource({
-  type: 'mysql',
-  host: process.env.DB_HOST ?? 'localhost',
-  port: Number(process.env.DB_PORT ?? 3306),
-  username: process.env.DB_USERNAME ?? 'root',
-  password: process.env.DB_PASSWORD ?? '',
-  database: process.env.DB_DATABASE ?? process.env.DB_NAME ?? 'gusto_soft',
-  synchronize: (process.env.DB_SYNC ?? process.env.TYPEORM_SYNCHRONIZE) !== 'false',
-  entities: [
-    Usuario,
-    Mesa,
-    Ingrediente,
-    MovimientoStock,
-    AlertaInventario,
-    Producto,
-    ProductRecipeIngredient,
-    Pedido,
-    PedidoDetalle,
-    PedidoEstadoHistorial,
-    Notificacion,
-    SystemParameter,
-    Cuenta,
-    AuditoriaFacturacion,
-    FacturaElectronica,
-    FacturaEnvio,
-    Empresa,
-  ],
-  timezone: 'Z',
-});
+const dataSource = AppDataSource;
 
 async function seed() {
   await dataSource.initialize();
@@ -61,7 +21,10 @@ async function seed() {
   const mesasRepo = dataSource.getRepository(Mesa);
   const ingredientesRepo = dataSource.getRepository(Ingrediente);
   const productosRepo = dataSource.getRepository(Producto);
-  const passwordHash = await bcrypt.hash('REMOVED_SEED_PASSWORD', Number(process.env.BCRYPT_ROUNDS ?? process.env.BYCRYPT_ROUNDS ?? 10));
+  const passwordHash = await bcrypt.hash(
+    process.env.SEED_USER_PASSWORD ?? 'ChangeMe123!',
+    Number(process.env.BCRYPT_ROUNDS ?? 10),
+  );
 
   const usuarios = [
     { nombre: 'Admin Demo', email: 'admin@gustosoft.local', rol: Rol.ADMIN },
