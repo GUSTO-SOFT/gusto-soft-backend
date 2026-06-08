@@ -49,7 +49,7 @@ export function createDataSourceOptions(): DataSourceOptions {
     username: envString('DB_USERNAME', 'root'),
     password: envString('DB_PASSWORD', ''),
     database: envString('DB_DATABASE', envString('DB_NAME', 'gusto_soft')),
-    synchronize: envBoolean('DB_SYNC', envBoolean('TYPEORM_SYNCHRONIZE', true)),
+    synchronize: envBoolean('DB_SYNC', true),
     logging: envBoolean('DB_LOGGING', false),
     entities: databaseEntities,
     migrations: ['dist/database/migrations/*.js'],
