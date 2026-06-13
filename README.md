@@ -45,6 +45,9 @@ DB_SYNC=false
 DB_SSL=true
 DB_SSL_REJECT_UNAUTHORIZED=false
 JWT_SECRET=...
+INITIAL_ADMIN_EMAIL=admin@tardescampestres.local
+INITIAL_ADMIN_PASSWORD=...
+INITIAL_ADMIN_NAME=Admin Principal
 SMTP_HOST=...
 SMTP_PORT=587
 SMTP_USER=...
@@ -64,6 +67,8 @@ DB_SSL_REJECT_UNAUTHORIZED=false
 ```
 
 Si vas a validar con el certificado CA de Aiven, puedes pegarlo en `DB_SSL_CA` y usar `DB_SSL_REJECT_UNAUTHORIZED=true`.
+
+Para crear el primer administrador en una base nueva, define `INITIAL_ADMIN_EMAIL` y `INITIAL_ADMIN_PASSWORD` en Render. El backend lo creara al arrancar si ese correo no existe. Despues del primer inicio exitoso puedes quitar esas variables para no dejar credenciales iniciales configuradas.
 
 Para activar CI/CD:
 
