@@ -1,3 +1,25 @@
+import 'dotenv/config';
+import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+import { envNumber } from './config/env';
+
+const apiCompatiblePrefixes = [
+  '/auth',
+  '/usuarios',
+  '/mesas',
+  '/inventario',
+  '/menu',
+  '/pedidos',
+  '/cuentas',
+  '/facturas',
+  '/empresa',
+  '/reportes',
+  '/cocina',
+  '/notificaciones',
+];
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -42,3 +64,5 @@ async function bootstrap() {
   const port = envNumber('PORT', 3000);
   await app.listen(port);
 }
+
+void bootstrap();
