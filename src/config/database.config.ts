@@ -42,6 +42,9 @@ export const databaseEntities = [
 ];
 
 export function createDataSourceOptions(): DataSourceOptions {
+  const sslEnabled = envBoolean('DB_SSL', false);
+  const sslCa = envString('DB_SSL_CA', '');
+
   return {
     type: 'mysql',
     host: envString('DB_HOST', 'localhost'),
@@ -54,6 +57,12 @@ export function createDataSourceOptions(): DataSourceOptions {
     entities: databaseEntities,
     migrations: ['dist/database/migrations/*.js'],
     timezone: 'Z',
+    ssl: sslEnabled
+      ? {
+          rejectUnauthorized: envBoolean('DB_SSL_REJECT_UNAUTHORIZED', sslCa !== ''),
+          ...(sslCa ? { ca: sslCa.replace(/\\n/g, '\n') } : {}),
+        }
+      : undefined,
   };
 }
 
