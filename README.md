@@ -48,10 +48,14 @@ JWT_SECRET=...
 INITIAL_ADMIN_EMAIL=admin@tardescampestres.local
 INITIAL_ADMIN_PASSWORD=...
 INITIAL_ADMIN_NAME=Admin Principal
+VERIFICATION_CODE_EXPIRATION_MINUTES=10
 SMTP_HOST=...
 SMTP_PORT=587
+SMTP_SECURE=false
 SMTP_USER=...
 SMTP_PASS=...
+SMTP_FROM=...
+SMTP_DISABLED=false
 ```
 
 Para Aiven MySQL, usa los datos del panel así:
@@ -118,6 +122,51 @@ Todos usan password `REMOVED_SEED_PASSWORD`.
 - `admin@gustosoft.local` rol `ADMIN`
 - `mesero@gustosoft.local` rol `MESERO`
 - `chef@gustosoft.local` rol `CHEF`
+
+## Registro y verificación de usuarios
+
+Endpoints principales de HU-RF26 a HU-RF29:
+
+```text
+POST /usuarios/registro
+GET /usuarios
+PATCH /usuarios/{id}/rol
+POST /usuarios/{id}/verificar
+POST /usuarios/{id}/verificacion/reenviar
+GET /usuarios/{id}/verificacion/estado
+```
+
+Ejemplo de registro:
+
+```json
+{
+  "nombre": "Ivan",
+  "apellido": "Gomez",
+  "email": "ivan@gmail.com",
+  "password": "AdminGusto2026!#",
+  "password_confirmacion": "AdminGusto2026!#"
+}
+```
+
+El usuario queda en `PENDIENTE_ASIGNACION_ROL` y `rol = NULL`.
+
+Luego un administrador asigna el rol:
+
+```json
+{
+  "rol": "MESERO"
+}
+```
+
+Al asignar el rol, el usuario pasa a `PENDIENTE_VERIFICACION`, se genera un código de 6 dígitos, se guarda solo el hash y el código se envía por SMTP al correo registrado. Para Gmail normalmente debes usar una contraseña de aplicación en `SMTP_PASS`.
+
+Para verificar la cuenta:
+
+```json
+{
+  "codigo": "123456"
+}
+```
 
 ## WebSockets
 

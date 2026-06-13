@@ -23,18 +23,6 @@ const apiCompatiblePrefixes = [
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Gusto Soft API')
-    .setDescription('API para mesas, menu, pedidos, cocina y notificaciones')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-
-  SwaggerModule.setup('api', app, document);
-  SwaggerModule.setup('docs', app, document);
-
   app.use((req: { url: string }, _res: unknown, next: () => void) => {
     if (
       apiCompatiblePrefixes.some(
@@ -47,6 +35,18 @@ async function bootstrap() {
     }
     next();
   });
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Gusto Soft API')
+    .setDescription('API para mesas, menu, pedidos, cocina y notificaciones')
+    .setVersion('0.1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('docs', app, document);
 
   app.enableCors({
     origin: ['https://gusto-soft.netlify.app', 'http://localhost:5173'],

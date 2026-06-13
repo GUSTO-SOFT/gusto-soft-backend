@@ -14,13 +14,15 @@ export class InitialAdminService implements OnApplicationBootstrap {
   constructor(@InjectRepository(Usuario) private readonly usuariosRepo: Repository<Usuario>) {}
 
   async onApplicationBootstrap() {
-    const email = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
-    const password = process.env.INITIAL_ADMIN_PASSWORD;
-    const nombre = process.env.INITIAL_ADMIN_NAME?.trim() || 'Admin Principal';
+  this.logger.log('InitialAdminService ejecutándose...');
 
-    if (!email || !password) {
-      return;
-    }
+  const email = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
+  const password = process.env.INITIAL_ADMIN_PASSWORD;
+  const nombre = process.env.INITIAL_ADMIN_NAME?.trim() || 'Admin Principal';
+
+  if (!email || !password) {
+    return;
+  }
 
     const exists = await this.usuariosRepo.findOne({ where: { email } });
     if (exists) {
@@ -29,6 +31,7 @@ export class InitialAdminService implements OnApplicationBootstrap {
     }
 
     const passwordHash = await bcrypt.hash(password, envNumber('BCRYPT_ROUNDS', 10));
+    const now = new Date();
     await this.usuariosRepo.save(
       this.usuariosRepo.create({
         nombre,
@@ -36,6 +39,8 @@ export class InitialAdminService implements OnApplicationBootstrap {
         passwordHash,
         rol: Rol.ADMIN,
         estado: UsuarioEstado.ACTIVO,
+        rolAsignadoAt: now,
+        verifiedAt: now,
       }),
     );
 

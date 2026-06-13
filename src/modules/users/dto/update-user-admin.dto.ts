@@ -29,7 +29,7 @@ export class UpdateUsuarioDto {
 
 export class UpdateUsuarioRolDto {
   @ApiProperty({ enum: Rol, example: Rol.CAJERO })
-  @IsEnum(Rol)
+  @IsString()
   rol: Rol;
 }
 
