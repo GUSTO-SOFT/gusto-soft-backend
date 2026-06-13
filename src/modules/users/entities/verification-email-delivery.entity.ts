@@ -24,6 +24,6 @@ export class VerificationEmailDelivery {
   @Column({ name: 'error_detail', type: 'text', nullable: true })
   detalleError: string | null;
 
-  @Column({ name: 'sent_at', type: 'timestamp' })
+  @Column({ name: 'sent_at', type: 'datetime' })
   sentAt: Date;
 }

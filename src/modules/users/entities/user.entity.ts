@@ -21,16 +21,16 @@ export class Usuario {
   @Column({ name: 'password_reset_token_hash', type: 'varchar', length: 128, nullable: true })
   passwordResetTokenHash: string | null;
 
-  @Column({ name: 'password_reset_expires_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'password_reset_expires_at', type: 'datetime', nullable: true })
   passwordResetExpiresAt: Date | null;
 
-  @Column({ name: 'verified_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'verified_at', type: 'datetime', nullable: true })
   verifiedAt: Date | null;
 
   @Column({ name: 'role', type: 'enum', enum: Rol, nullable: true })
   rol: Rol | null;
 
-  @Column({ name: 'role_assigned_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'role_assigned_at', type: 'datetime', nullable: true })
   rolAsignadoAt: Date | null;
 
   @Column({ name: 'status', type: 'enum', enum: UsuarioEstado, default: UsuarioEstado.ACTIVO })

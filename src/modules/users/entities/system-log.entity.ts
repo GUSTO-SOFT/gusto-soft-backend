@@ -11,6 +11,6 @@ export class SystemLog {
   @Column({ name: 'affected_records', default: 0 })
   registrosAfectados: number;
 
-  @Column({ name: 'executed_at', type: 'timestamp' })
+  @Column({ name: 'executed_at', type: 'datetime' })
   ejecutadoAt: Date;
 }

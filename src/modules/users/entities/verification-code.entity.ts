@@ -22,12 +22,12 @@ export class VerificationCode {
   @Column({ name: 'failed_attempts', default: 0 })
   failedAttempts: number;
 
-  @Column({ name: 'last_failed_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'last_failed_at', type: 'datetime', nullable: true })
   lastFailedAt: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @Column({ name: 'expires_at', type: 'timestamp' })
+  @Column({ name: 'expires_at', type: 'datetime' })
   expiresAt: Date;
 }

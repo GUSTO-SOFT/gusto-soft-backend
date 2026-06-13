@@ -20,6 +20,6 @@ export class UserAudit {
   @Column({ name: 'assigned_role', type: 'enum', enum: Rol })
   rolAsignado: Rol;
 
-  @Column({ name: 'timestamp_utc', type: 'timestamp' })
+  @Column({ name: 'timestamp_utc', type: 'datetime' })
   timestampUtc: Date;
 }
