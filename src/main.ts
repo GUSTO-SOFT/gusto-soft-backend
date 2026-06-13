@@ -3,20 +3,20 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { envNumber, envString } from './config/env';
-
-function corsOrigins(): string[] {
-  return envString('FRONTEND_ORIGIN', 'https://gusto-soft.netlify.app,http://localhost:5173')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-}
+import { envNumber } from './config/env';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.use((req: { url: string }, _res: unknown, next: () => void) => {
+    if (req.url.startsWith('/api/')) {
+      req.url = req.url.slice('/api'.length);
+    }
+    next();
+  });
+
   app.enableCors({
-    origin: corsOrigins(),
+    origin: ['https://gusto-soft.netlify.app', 'http://localhost:5173'],
     credentials: true,
   });
 
