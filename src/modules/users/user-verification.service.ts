@@ -85,6 +85,8 @@ export class UserVerificationService {
     }
 
     const now = new Date();
+    this.resetFailedAttemptsIfWindowExpired(currentCode, now);
+
     if (this.isTemporarilyBlocked(currentCode, now)) {
       throw new HttpException(
         errorBody('DEMASIADOS_INTENTOS', 'Demasiados intentos de verificacion'),
@@ -159,6 +161,17 @@ export class UserVerificationService {
       return false;
     }
     return now.getTime() - code.lastFailedAt.getTime() <= 15 * 60 * 1000;
+  }
+
+  private resetFailedAttemptsIfWindowExpired(code: VerificationCode, now: Date) {
+    if (!code.lastFailedAt) {
+      return;
+    }
+
+    if (now.getTime() - code.lastFailedAt.getTime() > 15 * 60 * 1000) {
+      code.failedAttempts = 0;
+      code.lastFailedAt = null;
+    }
   }
 
   private generateCode() {

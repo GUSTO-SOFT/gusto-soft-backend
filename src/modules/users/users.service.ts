@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { ConflictException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
+import { isEmail } from 'class-validator';
 import { Repository } from 'typeorm';
 import { Rol } from '../../common/enums/role.enum';
 import { UsuarioEstado } from '../../common/enums/user-status.enum';
@@ -16,7 +17,6 @@ import { UserAudit } from './entities/user-audit.entity';
 import { UserVerificationService } from './user-verification.service';
 
 type CreateUsuario = Pick<Usuario, 'nombre' | 'email' | 'passwordHash' | 'rol'>;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 @Injectable()
@@ -42,8 +42,12 @@ export class UsuariosService {
   async register(dto: RegisterUsuarioDto) {
     const email = dto.email.trim().toLowerCase();
 
-    if (!EMAIL_REGEX.test(email)) {
+    if (!isEmail(email, { allow_utf8_local_part: false, require_tld: true })) {
       throw new BadRequestException(errorBody('EMAIL_INVALIDO', 'Formato de email invalido'));
+    }
+
+    if (dto.password !== dto.password_confirmacion) {
+      throw new BadRequestException(errorBody('PASSWORDS_NO_COINCIDEN', 'Las passwords no coinciden'));
     }
 
     if (!PASSWORD_REGEX.test(dto.password)) {
@@ -53,10 +57,6 @@ export class UsuariosService {
           'La password debe tener minimo 8 caracteres, una mayuscula, un numero y un caracter especial',
         ),
       );
-    }
-
-    if (dto.password !== dto.password_confirmacion) {
-      throw new BadRequestException(errorBody('PASSWORDS_NO_COINCIDEN', 'Las passwords no coinciden'));
     }
 
     const exists = await this.findByEmail(email);
