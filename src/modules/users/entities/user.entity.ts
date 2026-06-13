@@ -24,8 +24,14 @@ export class Usuario {
   @Column({ name: 'password_reset_expires_at', type: 'timestamp', nullable: true })
   passwordResetExpiresAt: Date | null;
 
-  @Column({ name: 'role', type: 'enum', enum: Rol })
-  rol: Rol;
+  @Column({ name: 'verified_at', type: 'timestamp', nullable: true })
+  verifiedAt: Date | null;
+
+  @Column({ name: 'role', type: 'enum', enum: Rol, nullable: true })
+  rol: Rol | null;
+
+  @Column({ name: 'role_assigned_at', type: 'timestamp', nullable: true })
+  rolAsignadoAt: Date | null;
 
   @Column({ name: 'status', type: 'enum', enum: UsuarioEstado, default: UsuarioEstado.ACTIVO })
   estado: UsuarioEstado;

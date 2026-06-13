@@ -37,11 +37,23 @@ services:
         sync: false
       - key: INITIAL_ADMIN_NAME
         sync: false
+      - key: VERIFICATION_CODE_EXPIRATION_MINUTES
+        value: 10
+      - key: PENDING_USERS_RETENTION_DAYS
+        value: 7
+      - key: USER_CLEANUP_DISABLED
+        value: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
         value: 587
+      - key: SMTP_SECURE
+        value: false
       - key: SMTP_USER
         sync: false
       - key: SMTP_PASS
         sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SMTP_DISABLED
+        value: false

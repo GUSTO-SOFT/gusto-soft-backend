@@ -14,6 +14,8 @@ import { Usuario } from '../modules/users/entities/user.entity';
 
 const dataSource = AppDataSource;
 
+
+
 async function seed() {
   await dataSource.initialize();
 

@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtUser } from '../../common/interfaces/jwt-user.interface';
 import { envString } from '../../config/env';
+import { UsuarioEstado } from '../../common/enums/user-status.enum';
 import { UsuariosService } from '../users/users.service';
 
 @Injectable()
@@ -19,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtUser): Promise<JwtUser> {
     const usuario = await this.usuariosService.findById(payload.sub);
-    if (!usuario) {
+    if (!usuario || usuario.estado !== UsuarioEstado.ACTIVO || !usuario.rol) {
       throw new UnauthorizedException('Token invalido');
     }
 

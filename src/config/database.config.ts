@@ -18,6 +18,10 @@ import { PedidoEstadoHistorial } from '../modules/orders/entities/order-status-h
 import { SystemParameter } from '../modules/reports/entities/system-parameter.entity';
 import { Mesa } from '../modules/tables/entities/restaurant-table.entity';
 import { Usuario } from '../modules/users/entities/user.entity';
+import { SystemLog } from '../modules/users/entities/system-log.entity';
+import { UserAudit } from '../modules/users/entities/user-audit.entity';
+import { VerificationCode } from '../modules/users/entities/verification-code.entity';
+import { VerificationEmailDelivery } from '../modules/users/entities/verification-email-delivery.entity';
 import { envBoolean, envNumber, envString } from './env';
 
 export const databaseEntities = [
@@ -39,6 +43,10 @@ export const databaseEntities = [
   FacturaElectronica,
   FacturaEnvio,
   Empresa,
+  UserAudit,
+  SystemLog,
+  VerificationCode,
+  VerificationEmailDelivery,
 ];
 
 export function createDataSourceOptions(): DataSourceOptions {

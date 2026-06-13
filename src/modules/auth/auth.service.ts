@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectDataSource } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -6,6 +6,7 @@ import { createHash, randomBytes } from 'crypto';
 import { DataSource } from 'typeorm';
 import { errorBody } from '../../common/utils/error-response';
 import { envBoolean, envNumber } from '../../config/env';
+import { UsuarioEstado } from '../../common/enums/user-status.enum';
 import { Usuario } from '../users/entities/user.entity';
 import { UsuariosService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
@@ -76,10 +77,18 @@ export class AuthService {
       throw new UnauthorizedException(errorBody('CREDENCIALES_INVALIDAS', 'Email o password incorrectos'));
     }
 
+    if (usuario.estado !== UsuarioEstado.ACTIVO) {
+      throw new ForbiddenException(errorBody('CUENTA_NO_ACTIVA', 'La cuenta aun no esta activa'));
+    }
+
     return this.loginWithUser(usuario);
   }
 
-  private loginWithUser(usuario: { id: number; email: string; rol: string; nombre: string }) {
+  private loginWithUser(usuario: { id: number; email: string; rol: string | null; nombre: string }) {
+    if (!usuario.rol) {
+      throw new ForbiddenException(errorBody('CUENTA_NO_ACTIVA', 'La cuenta aun no esta activa'));
+    }
+
     const payload = { sub: usuario.id, email: usuario.email, rol: usuario.rol };
     return {
       access_token: this.jwtService.sign(payload),

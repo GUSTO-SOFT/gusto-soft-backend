@@ -31,6 +31,7 @@ export class InitialAdminService implements OnApplicationBootstrap {
     }
 
     const passwordHash = await bcrypt.hash(password, envNumber('BCRYPT_ROUNDS', 10));
+    const now = new Date();
     await this.usuariosRepo.save(
       this.usuariosRepo.create({
         nombre,
@@ -38,6 +39,8 @@ export class InitialAdminService implements OnApplicationBootstrap {
         passwordHash,
         rol: Rol.ADMIN,
         estado: UsuarioEstado.ACTIVO,
+        rolAsignadoAt: now,
+        verifiedAt: now,
       }),
     );
 
