@@ -31,6 +31,12 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+      - key: INITIAL_ADMIN_EMAIL
+        sync: false
+      - key: INITIAL_ADMIN_PASSWORD
+        sync: false
+      - key: INITIAL_ADMIN_NAME
+        sync: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
