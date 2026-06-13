@@ -35,7 +35,7 @@ Variables requeridas en Render:
 
 ```text
 NODE_ENV=production
-FRONTEND_ORIGIN=https://tu-frontend
+FRONTEND_ORIGIN=https://gusto-soft.netlify.app
 DB_HOST=...
 DB_PORT=3306
 DB_USERNAME=...

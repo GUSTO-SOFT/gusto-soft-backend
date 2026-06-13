@@ -5,11 +5,18 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { envNumber, envString } from './config/env';
 
+function corsOrigins(): string[] {
+  return envString('FRONTEND_ORIGIN', 'https://gusto-soft.netlify.app,http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: envString('FRONTEND_ORIGIN', '*'),
+    origin: corsOrigins(),
     credentials: true,
   });
 
