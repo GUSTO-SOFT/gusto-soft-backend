@@ -41,6 +41,8 @@ services:
         sync: false
       - key: VERIFICATION_CODE_EXPIRATION_MINUTES
         value: 10
+      - key: REGISTRATION_CODE_EXPIRATION_MINUTES
+        value: 30
       - key: PENDING_USERS_RETENTION_DAYS
         value: 7
       - key: USER_CLEANUP_DISABLED

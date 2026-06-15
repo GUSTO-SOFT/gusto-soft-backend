@@ -6,7 +6,7 @@ import { Rol } from '../../common/enums/role.enum';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateMeseroDto, CreateUsuarioDto } from './dto/create-user.dto';
 import { QueryUsuariosDto } from './dto/query-users.dto';
-import { RegisterUsuarioDto, VerifyUsuarioDto } from './dto/register-user.dto';
+import { CreateRegistrationCodeDto, RegisterUsuarioDto, VerifyUsuarioDto } from './dto/register-user.dto';
 import { UpdateUsuarioDto, UpdateUsuarioEstadoDto, UpdateUsuarioRolDto } from './dto/update-user-admin.dto';
 import { UsuariosService } from './users.service';
 import { JwtUser } from '../../common/interfaces/jwt-user.interface';
@@ -22,6 +22,13 @@ export class UsuariosController {
   @Post('registro')
   register(@Body() dto: RegisterUsuarioDto) {
     return this.usuariosService.register(dto);
+  }
+
+  @Post('registro/codigos')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Rol.ADMIN)
+  createRegistrationCode(@Body() dto: CreateRegistrationCodeDto, @Req() req: RequestWithUser) {
+    return this.usuariosService.createRegistrationCode(req.user.sub, dto.expires_in_minutes);
   }
 
   @Post(':id/verificar')
