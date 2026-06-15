@@ -64,6 +64,7 @@ export function createDataSourceOptions(): DataSourceOptions {
     logging: envBoolean('DB_LOGGING', false),
     entities: databaseEntities,
     migrations: ['dist/database/migrations/*.js'],
+    migrationsRun: envBoolean('DB_MIGRATIONS_RUN', !envBoolean('DB_SYNC', true)),
     timezone: 'Z',
     ssl: sslEnabled
       ? {
