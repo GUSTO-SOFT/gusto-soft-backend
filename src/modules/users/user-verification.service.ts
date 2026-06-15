@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, randomInt } from 'crypto';
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 import { MoreThan, Repository } from 'typeorm';
 import { UsuarioEstado } from '../../common/enums/user-status.enum';
 import { errorBody } from '../../common/utils/error-response';
@@ -214,17 +214,20 @@ export class UserVerificationService {
       return;
     }
 
-    const user = envString('SMTP_USER', '');
-    const pass = envString('SMTP_PASS', '');
+    const user = envString('SMTP_USER');
+    const pass = envString('SMTP_PASS');
     const transporter = nodemailer.createTransport({
       host: envString('SMTP_HOST', 'smtp.gmail.com'),
       port: envNumber('SMTP_PORT', 587),
       secure: envBoolean('SMTP_SECURE', false),
-      auth: user && pass ? { user, pass } : undefined,
+      auth: {
+        user,
+        pass,
+      },
     });
 
     await transporter.sendMail({
-      from: envString('SMTP_FROM', user || 'no-reply@gustosoft.local'),
+      from: envString('SMTP_FROM', user),
       to: usuario.email,
       subject: 'Codigo de verificacion Gusto Soft',
       text: `Hola ${usuario.nombre}, tu codigo de verificacion es ${code}. Tiene vigencia de ${minutes} minutos.`,
