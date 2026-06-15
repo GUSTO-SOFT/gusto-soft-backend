@@ -3,7 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { envNumber } from './config/env';
+import { envNumber, envString } from './config/env';
 
 const apiCompatiblePrefixes = [
   '/auth',
@@ -19,6 +19,31 @@ const apiCompatiblePrefixes = [
   '/cocina',
   '/notificaciones',
 ];
+
+const defaultCorsOrigins = [
+  'https://gusto-soft.netlify.app',
+  'https://gusto-soft2.netlify.app',
+  'http://localhost:5173',
+];
+
+function normalizeOrigin(origin: string) {
+  try {
+    return new URL(origin).origin;
+  } catch {
+    return origin.trim().replace(/\/$/, '');
+  }
+}
+
+function corsOrigins() {
+  const envOrigins = envString('FRONTEND_ORIGIN', '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return Array.from(
+    new Set([...defaultCorsOrigins, ...envOrigins].map(normalizeOrigin)),
+  );
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -48,8 +73,16 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
   SwaggerModule.setup('docs', app, document);
 
+  const allowedOrigins = corsOrigins();
   app.enableCors({
-    origin: ['https://gusto-soft.netlify.app', 'https://gusto-soft2.netlify.app', 'http://localhost:5173'],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    },
     credentials: true,
   });
 
