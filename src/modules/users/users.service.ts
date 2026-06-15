@@ -3,6 +3,7 @@ import { ConflictException, UnprocessableEntityException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { isEmail } from 'class-validator';
+import { createHash, randomInt } from 'crypto';
 import { Repository } from 'typeorm';
 import { Rol } from '../../common/enums/role.enum';
 import { UsuarioEstado } from '../../common/enums/user-status.enum';
@@ -12,6 +13,7 @@ import { CreateMeseroDto, CreateUsuarioDto } from './dto/create-user.dto';
 import { QueryUsuariosDto } from './dto/query-users.dto';
 import { RegisterUsuarioDto, VerifyUsuarioDto } from './dto/register-user.dto';
 import { UpdateUsuarioDto } from './dto/update-user-admin.dto';
+import { RegistrationCode } from './entities/registration-code.entity';
 import { Usuario } from './entities/user.entity';
 import { UserAudit } from './entities/user-audit.entity';
 import { UserVerificationService } from './user-verification.service';
@@ -23,6 +25,7 @@ const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 export class UsuariosService {
   constructor(
     @InjectRepository(Usuario) private readonly usuariosRepo: Repository<Usuario>,
+    @InjectRepository(RegistrationCode) private readonly registrationCodesRepo: Repository<RegistrationCode>,
     @InjectRepository(UserAudit) private readonly userAuditsRepo: Repository<UserAudit>,
     private readonly verificationService: UserVerificationService,
   ) {}
@@ -39,8 +42,27 @@ export class UsuariosService {
     return this.usuariosRepo.save(this.usuariosRepo.create(data));
   }
 
+  async createRegistrationCode(adminId: number, expiresInMinutes?: number) {
+    const minutes = expiresInMinutes ?? envNumber('REGISTRATION_CODE_EXPIRATION_MINUTES', 30);
+    const code = this.generateRegistrationCode();
+    const registrationCode = await this.registrationCodesRepo.save(
+      this.registrationCodesRepo.create({
+        codigoHash: this.hashRegistrationCode(code),
+        creadoPorAdminId: adminId,
+        expiresAt: new Date(Date.now() + minutes * 60 * 1000),
+      }),
+    );
+
+    return {
+      codigo: code,
+      expires_at: registrationCode.expiresAt,
+      expires_in_minutes: minutes,
+    };
+  }
+
   async register(dto: RegisterUsuarioDto) {
     const email = dto.email.trim().toLowerCase();
+    const registrationCodeHash = this.hashRegistrationCode(dto.codigo_registro.trim());
 
     if (!isEmail(email, { allow_utf8_local_part: false, require_tld: true })) {
       throw new BadRequestException(errorBody('EMAIL_INVALIDO', 'Formato de email invalido'));
@@ -65,18 +87,35 @@ export class UsuariosService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, Math.max(12, envNumber('BCRYPT_ROUNDS', 12)));
-    const usuario = await this.usuariosRepo.save(
-      this.usuariosRepo.create({
-        ...(exists ?? {}),
-        nombre: `${dto.nombre.trim()} ${dto.apellido.trim()}`.trim(),
-        email,
-        passwordHash,
-        rol: null,
-        rolAsignadoAt: null,
-        verifiedAt: null,
-        estado: UsuarioEstado.PENDIENTE_ASIGNACION_ROL,
-      }),
-    );
+    const now = new Date();
+    const usuario = await this.usuariosRepo.manager.transaction(async (manager) => {
+      const registrationCode = await manager.findOne(RegistrationCode, {
+        where: { codigoHash: registrationCodeHash },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      this.ensureRegistrationCodeAvailable(registrationCode, now);
+
+      const savedUser = await manager.save(
+        Usuario,
+        manager.create(Usuario, {
+          ...(exists ?? {}),
+          nombre: `${dto.nombre.trim()} ${dto.apellido.trim()}`.trim(),
+          email,
+          passwordHash,
+          rol: null,
+          rolAsignadoAt: null,
+          verifiedAt: null,
+          estado: UsuarioEstado.PENDIENTE_ASIGNACION_ROL,
+        }),
+      );
+
+      registrationCode.usadoAt = now;
+      registrationCode.usadoPorUsuarioId = savedUser.id;
+      await manager.save(RegistrationCode, registrationCode);
+
+      return savedUser;
+    });
 
     return {
       usuario_id: usuario.id,
@@ -230,5 +269,23 @@ export class UsuariosService {
       created_at: usuario.createdAt,
       updated_at: usuario.updatedAt,
     };
+  }
+
+  private generateRegistrationCode() {
+    return randomInt(0, 1000000).toString().padStart(6, '0');
+  }
+
+  private hashRegistrationCode(code: string) {
+    return createHash('sha256').update(code).digest('hex');
+  }
+
+  private ensureRegistrationCodeAvailable(code: RegistrationCode | null, now: Date): asserts code is RegistrationCode {
+    if (!code || code.usadoAt) {
+      throw new BadRequestException(errorBody('CODIGO_REGISTRO_INVALIDO', 'Codigo de registro invalido'));
+    }
+
+    if (code.expiresAt.getTime() <= now.getTime()) {
+      throw new BadRequestException(errorBody('CODIGO_REGISTRO_EXPIRADO', 'Codigo de registro expirado'));
+    }
   }
 }

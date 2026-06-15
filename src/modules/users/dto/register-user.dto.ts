@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength } from 'class-validator';
+import { IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class RegisterUsuarioDto {
   @ApiProperty({ example: 'Ivan' })
@@ -25,6 +26,20 @@ export class RegisterUsuarioDto {
   @IsString()
   password_confirmacion: string;
 
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @Matches(/^\d{6}$/)
+  codigo_registro: string;
+}
+
+export class CreateRegistrationCodeDto {
+  @ApiProperty({ example: 30, required: false })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(1440)
+  expires_in_minutes?: number;
 }
 
 export class VerifyUsuarioDto {

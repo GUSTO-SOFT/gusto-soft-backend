@@ -18,6 +18,7 @@ import { PedidoEstadoHistorial } from '../modules/orders/entities/order-status-h
 import { SystemParameter } from '../modules/reports/entities/system-parameter.entity';
 import { Mesa } from '../modules/tables/entities/restaurant-table.entity';
 import { Usuario } from '../modules/users/entities/user.entity';
+import { RegistrationCode } from '../modules/users/entities/registration-code.entity';
 import { SystemLog } from '../modules/users/entities/system-log.entity';
 import { UserAudit } from '../modules/users/entities/user-audit.entity';
 import { VerificationCode } from '../modules/users/entities/verification-code.entity';
@@ -43,6 +44,7 @@ export const databaseEntities = [
   FacturaElectronica,
   FacturaEnvio,
   Empresa,
+  RegistrationCode,
   UserAudit,
   SystemLog,
   VerificationCode,
