@@ -49,7 +49,7 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   app.enableCors({
-    origin: ['https://gusto-soft.netlify.app', 'http://localhost:5173'],
+    origin: ['https://gusto-soft.netlify.app', 'https://gusto-soft2.netlify.app', 'http://localhost:5173'],
     credentials: true,
   });
 
