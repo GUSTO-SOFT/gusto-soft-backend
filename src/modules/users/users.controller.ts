@@ -77,8 +77,8 @@ export class UsuariosController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Rol.ADMIN)
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUsuarioDto) {
-    return this.usuariosService.updateByAdmin(id, dto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUsuarioDto, @Req() req: RequestWithUser) {
+    return this.usuariosService.updateByAdmin(id, dto, req.user.sub);
   }
 
   @Patch(':id/rol')

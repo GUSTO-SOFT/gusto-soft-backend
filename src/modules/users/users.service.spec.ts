@@ -192,4 +192,39 @@ describe('UsuariosService - registro y verificacion', () => {
       }),
     );
   });
+
+  it('update admin asigna rol correctamente cuando usuario esta pendiente', async () => {
+    const { service, usuariosRepo, verificationService } = createService();
+    usuariosRepo.findOne
+      .mockResolvedValueOnce({
+        id: 25,
+        email: 'ana@example.com',
+        nombre: 'Ana Ruiz',
+        estado: UsuarioEstado.PENDIENTE_ASIGNACION_ROL,
+        rol: null,
+      })
+      .mockResolvedValueOnce({
+        id: 25,
+        email: 'ana@example.com',
+        nombre: 'Ana Ruiz',
+        estado: UsuarioEstado.PENDIENTE_ASIGNACION_ROL,
+        rol: null,
+      });
+
+    const response = await service.updateByAdmin(25, { rol: Rol.CAJERO }, 1);
+
+    expect(response).toEqual({
+      usuario_id: 25,
+      rol: Rol.CAJERO,
+      estado: UsuarioEstado.PENDIENTE_VERIFICACION,
+      verificacion_enviada: true,
+    });
+    expect(verificationService.createAndSendCode).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 25,
+        rol: Rol.CAJERO,
+        estado: UsuarioEstado.PENDIENTE_VERIFICACION,
+      }),
+    );
+  });
 });
