@@ -152,20 +152,36 @@ export class UsuariosService {
     return this.findAll({ rol: Rol.MESERO, estado: UsuarioEstado.ACTIVO });
   }
 
-  async updateByAdmin(id: number, dto: UpdateUsuarioDto) {
+  async updateByAdmin(id: number, dto: UpdateUsuarioDto, adminId?: number) {
     const usuario = await this.findOrFail(id);
 
+    let hasProfileChanges = false;
     if (dto.email !== undefined && dto.email !== usuario.email) {
       const exists = await this.findByEmail(dto.email);
       if (exists && exists.id !== id) {
         throw new ConflictException(errorBody('USUARIO_DUPLICADO', 'Ya existe un usuario con ese email'));
       }
       usuario.email = dto.email;
+      hasProfileChanges = true;
     }
 
     if (dto.nombre !== undefined) {
       usuario.nombre = dto.nombre;
+      hasProfileChanges = true;
     }
+
+    if (dto.rol !== undefined && usuario.estado === UsuarioEstado.PENDIENTE_ASIGNACION_ROL) {
+      if (adminId === undefined) {
+        throw new BadRequestException(errorBody('ADMIN_REQUERIDO', 'Administrador requerido para asignar rol'));
+      }
+
+      if (hasProfileChanges) {
+        await this.usuariosRepo.save(usuario);
+      }
+
+      return this.assignRol(id, dto.rol, adminId);
+    }
+
     if (dto.rol !== undefined) {
       usuario.rol = dto.rol;
     }
